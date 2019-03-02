@@ -9,18 +9,30 @@ output:
 
 
 ## Loading and preprocessing the data
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+
+
+
+```
+## 
+## Attaching package: 'dplyr'
 ```
 
-```{r, echo=FALSE}
-library(ggplot2)
-library(dplyr)
+```
+## The following objects are masked from 'package:stats':
+## 
+##     filter, lag
+```
+
+```
+## The following objects are masked from 'package:base':
+## 
+##     intersect, setdiff, setequal, union
 ```
 
 Load the CSV file to variable
 
-```{r}
+
+```r
 if(!file.exists('activity.csv')) {
     unzip('activity.zip')
 }
@@ -33,12 +45,12 @@ activityData <- read.csv('activity.csv')
 
 ### Calculate the total number of steps taken per day.
 
-```{r}
+
+```r
 sumOfStepsByDay <- activityData %>%
     filter(!is.na(steps)) %>%
     group_by(date) %>%
     summarize(steps = sum(steps))  
-
 ```
 
 Note: 
@@ -46,7 +58,8 @@ NA values have been ignored in this histogram as per instruction (and therefore 
 
 ### Histogram of total number of steps taken each day.
 
-```{r}
+
+```r
 qplot(sumOfStepsByDay$steps,
       geom="histogram", 
       xlab="Total Steps in a day", 
@@ -54,16 +67,19 @@ qplot(sumOfStepsByDay$steps,
       binwidth=1000)
 ```
 
+![](PA1_template_files/figure-html/unnamed-chunk-4-1.png)<!-- -->
+
 The takeaway from this graph is really only that a median number of steps was achieved most often based on measurements of this data.
 
 ### Calculation of the mean and median of the total number of steps per day
-```{r}
+
+```r
 sumOfStepsByDayMean <- mean(sumOfStepsByDay$steps)
 sumOfStepsByDayMedian <- median(sumOfStepsByDay$steps)
 ```
 
-The mean steps per day was `r sumOfStepsByDayMean`.
-The median steps per day was `r sumOfStepsByDayMedian`.
+The mean steps per day was 1.0766189\times 10^{4}.
+The median steps per day was 10765.
 
 ## What is the average daily activity pattern?
 
@@ -71,7 +87,8 @@ The median steps per day was `r sumOfStepsByDayMedian`.
 
 I used dplyr to calculate the average over interval values.
 
-```{r}
+
+```r
 sumOfStepsByIntervalAveraged <- activityData %>%
     filter(!is.na(steps)) %>%
     group_by(interval) %>%
@@ -85,34 +102,39 @@ qplot(x = sumOfStepsByIntervalAveraged$interval,
       ylab="Sum of Steps averaged all days")
 ```
 
+![](PA1_template_files/figure-html/unnamed-chunk-6-1.png)<!-- -->
+
 ### Which 5 minute interval on average contains the most steps?
 Using dplyr, we can filter the data used in the previous plot to show the interval with the maximum average steps.
 
-```{r}
+
+```r
 intervalWithMostSteps <- sumOfStepsByIntervalAveraged %>% filter(steps==max(steps))
 ```
 
-The interval with the most steps is `r intervalWithMostSteps$interval`.
+The interval with the most steps is 835.
 
 ## Imputing missing values
 
 ### Calculating the total number of missing values
-```{r}
+
+```r
 totalMissingValues <- sum(is.na(activityData$steps))
 ```
 
-Total missing values is `r totalMissingValues`.
+Total missing values is 2304.
 
 ### Strategy for imputing missing values
 
-As seen above, there are `r totalMissingValues` missing steps values in the data.  To cater for this fact and take into account the unrecorded values here, the strategy I'm using is to insert the average steps for that day into the data records with missing values.  
+As seen above, there are 2304 missing steps values in the data.  To cater for this fact and take into account the unrecorded values here, the strategy I'm using is to insert the average steps for that day into the data records with missing values.  
 
 This strategy is fairly simplistic but over a large volume of data it might work out better.
 
 Note also, some days do not have ANY valid data, therefore a mean cannot be calculated.  In these cases, the mean was assumed to be 0 and therefore the NA values were also replaced by 0 (for lack of further information at the granularity of those days).
 
 ### Creating a new dataset from original with missing data filled in.
-```{r}
+
+```r
 activityDataImputed <- activityData %>%
     group_by(date) %>%
     mutate(
@@ -129,7 +151,8 @@ activityDataImputed <- activityData %>%
 ```
 
 ### Histogram of total number of steps taken each day with mean and median by day.
-```{r}
+
+```r
 sumOfStepsByDayImputed <- activityDataImputed %>%
     group_by(date) %>%
     summarize(steps = sum(steps))  
@@ -144,10 +167,12 @@ qplot(sumOfStepsByDayImputed$steps,
     binwidth=1000)
 ```
 
+![](PA1_template_files/figure-html/unnamed-chunk-10-1.png)<!-- -->
+
 The biggest difference in the histogram appears to be a spike in the number of steps in an earlier histogram bucket.
 
-The mean steps per day was `r sumOfStepsByDayMeanImputed`.
-The median steps per day was `r sumOfStepsByDayMedianImputed`.
+The mean steps per day was 9354.2295082.
+The median steps per day was 1.0395\times 10^{4}.
 
 The mean and the median have also taken a fall due to the number of days in which no data was collected and therefore steps taken was assumed to be 0.
 
@@ -157,7 +182,8 @@ The mean and the median have also taken a fall due to the number of days in whic
 I had some trouble with the weekdays() function since it was displaying named weekdays in my local language which may not be reproducible on other machines if comparing to text strings like "Saturday" to "Samstag".
 Therefore, I used an alternate method by getting the number of the day of the week. :)
 
-```{r}
+
+```r
 activityDataImputed$dayNumber = 
     as.integer(
         format(
@@ -174,7 +200,8 @@ activityDataImputed$weektype <-
 
 ### Make a panel plot showing average steps taken for weekdays/weekends
 The differences in activity for weekedays and weekends shows that the subject(s) are more active overall on the weekends on average, however, there is a large spike at a similar time during weekdays with more steps (possibly morning exercise or walking to work).
-```{r}
+
+```r
 activityDataImputedWithIntervalAverage <- 
     activityDataImputed %>%
     group_by(weektype,interval) %>%
@@ -186,3 +213,5 @@ plot <- ggplot(activityDataImputedWithIntervalAverage,
     facet_wrap(~weektype,ncol=1,nrow=2)
 print(plot)
 ```
+
+![](PA1_template_files/figure-html/unnamed-chunk-12-1.png)<!-- -->
